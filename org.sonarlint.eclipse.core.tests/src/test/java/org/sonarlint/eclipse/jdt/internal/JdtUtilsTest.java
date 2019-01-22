@@ -36,6 +36,7 @@ import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -59,6 +60,15 @@ public class JdtUtilsTest extends SonarTestCase {
 
   @Rule
   public TemporaryFolder temp = new TemporaryFolder();
+
+  private static IProject jdtProject;
+  private static IProject nonJdtProject;
+
+  @BeforeClass
+  public static void prepare() throws Exception {
+    jdtProject = importEclipseProject("SimpleJdtProject");
+    nonJdtProject = importEclipseProject("SimpleNonJdtProject");
+  }
 
   @Test
   public void shouldConfigureJavaSourceAndTarget() throws JavaModelException, IOException {
@@ -274,7 +284,6 @@ public class JdtUtilsTest extends SonarTestCase {
 
   @Test
   public void keepOnlyJavaFilesOnClasspathForJdtProject() throws Exception {
-    IProject jdtProject = importEclipseProject("SimpleJdtProject");
     IFile onClassPath = (IFile) jdtProject.findMember("src/main/java/ClassOnDefaultPackage.java");
     IFile compileError = (IFile) jdtProject.findMember("src/main/java/ClassWithCompileError.java");
     IFile outsideClassPath = (IFile) jdtProject.findMember("ClassOutsideSourceFolder.java");
@@ -288,7 +297,6 @@ public class JdtUtilsTest extends SonarTestCase {
 
   @Test
   public void qualifyTestFiles() throws Exception {
-    IProject jdtProject = importEclipseProject("SimpleJdtProject");
     IFile onClassPath = (IFile) jdtProject.findMember("src/main/java/ClassOnDefaultPackage.java");
     IFile compileError = (IFile) jdtProject.findMember("src/main/java/ClassWithCompileError.java");
     IFile outsideClassPath = (IFile) jdtProject.findMember("ClassOutsideSourceFolder.java");
@@ -306,7 +314,6 @@ public class JdtUtilsTest extends SonarTestCase {
 
   @Test
   public void ignoreJavaFilesOnNonJdtProject() throws Exception {
-    IProject nonJdtProject = importEclipseProject("SimpleNonJdtProject");
     IFile java = (IFile) nonJdtProject.findMember("src/main/ClassOnDefaultPackage.java");
     IFile nonJava = (IFile) nonJdtProject.findMember("src/main/sample.js");
     IFile contentTypeExtendingJava = (IFile) nonJdtProject.findMember("src/main/Program.cbl");
