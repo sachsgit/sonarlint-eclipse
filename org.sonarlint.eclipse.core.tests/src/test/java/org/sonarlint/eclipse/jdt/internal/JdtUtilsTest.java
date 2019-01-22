@@ -42,7 +42,10 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.sonarlint.eclipse.core.analysis.IFileTypeProvider.ISonarLintFileType;
 import org.sonarlint.eclipse.core.analysis.IPreAnalysisContext;
+import org.sonarlint.eclipse.core.internal.resources.DefaultSonarLintFileAdapter;
+import org.sonarlint.eclipse.core.internal.resources.DefaultSonarLintProjectAdapter;
 import org.sonarlint.eclipse.tests.common.SonarTestCase;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -281,6 +284,24 @@ public class JdtUtilsTest extends SonarTestCase {
     assertThat(JdtUtils.shouldExclude(compileError)).isTrue();
     assertThat(JdtUtils.shouldExclude(outsideClassPath)).isTrue();
     assertThat(JdtUtils.shouldExclude(nonJava)).isFalse();
+  }
+
+  @Test
+  public void qualifyTestFiles() throws Exception {
+    IProject jdtProject = importEclipseProject("SimpleJdtProject");
+    IFile onClassPath = (IFile) jdtProject.findMember("src/main/java/ClassOnDefaultPackage.java");
+    IFile compileError = (IFile) jdtProject.findMember("src/main/java/ClassWithCompileError.java");
+    IFile outsideClassPath = (IFile) jdtProject.findMember("ClassOutsideSourceFolder.java");
+    IFile nonJava = (IFile) jdtProject.findMember("src/main/sample.js");
+    IFile testFile = (IFile) jdtProject.findMember("src/test/java/MyTest.java");
+
+    DefaultSonarLintProjectAdapter slPrj = new DefaultSonarLintProjectAdapter(jdtProject);
+
+    assertThat(JdtUtils.qualify(new DefaultSonarLintFileAdapter(slPrj, onClassPath))).isEqualTo(ISonarLintFileType.MAIN);
+    assertThat(JdtUtils.qualify(new DefaultSonarLintFileAdapter(slPrj, compileError))).isEqualTo(ISonarLintFileType.MAIN);
+    assertThat(JdtUtils.qualify(new DefaultSonarLintFileAdapter(slPrj, outsideClassPath))).isEqualTo(ISonarLintFileType.UNKNOWN);
+    assertThat(JdtUtils.qualify(new DefaultSonarLintFileAdapter(slPrj, nonJava))).isEqualTo(ISonarLintFileType.UNKNOWN);
+    assertThat(JdtUtils.qualify(new DefaultSonarLintFileAdapter(slPrj, testFile))).isEqualTo(ISonarLintFileType.TEST);
   }
 
   @Test
